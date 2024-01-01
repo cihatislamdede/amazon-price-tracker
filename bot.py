@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 import db as db
 
+db.create_table()
+
 handler = logging.FileHandler(filename="discord.log", encoding="utf-8")
 handler.setFormatter(
     logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")

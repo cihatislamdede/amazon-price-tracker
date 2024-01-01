@@ -129,12 +129,11 @@ def fetch_price_from_amazon(url):
         product_price = (
             soup.find("span", class_="a-price-whole").get_text().split(",")[0]
         )
+        if not product_price:
+            return None
         # remove dot from price
         product_price = product_price.replace(".", "")
         return float(product_price)
     except Exception as e:
         print(e)
         return None
-
-
-# create_table()
