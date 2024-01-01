@@ -3,6 +3,8 @@ import os
 from datetime import datetime
 
 import discord
+import requests
+from bs4 import BeautifulSoup
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
@@ -26,6 +28,11 @@ load_dotenv()
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHANNEL_ID = int(os.environ["CHANNEL_ID"])
 CURRENCY = "TL"
+headers = {
+    "Accept-Language": "en-US,en;q=0.9,tr;q=0.8",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 OPR/105.0.0.0",
+    "Cache-Control": "max-age=0",
+}
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -33,12 +40,30 @@ intents.message_content = True
 bot = commands.Bot(command_prefix=".", intents=intents)
 
 
+def fetch_price_from_amazon(url):
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        product_price = (
+            soup.find("span", class_="a-price-whole").get_text().split(",")[0]
+        )
+        if not product_price:
+            return None
+        # remove dot from price
+        product_price = product_price.replace(".", "")
+        return float(product_price)
+    except Exception as e:
+        logging.error(e)
+        return None
+
+
 @bot.event
 async def on_ready():
     await bot.tree.sync()
     logging.info(f"Bot Started --> {bot.user.name}")
     await bot.change_presence(
-        activity=discord.Activity(type=discord.ActivityType.watching, name="Amazon")
+        activity=discord.Activity(type=discord.ActivityType.watching, name="Amazon 💸")
     )
     await check_price.start()
 
@@ -146,7 +171,7 @@ async def updateprice(interaction: discord.Interaction, new_price: float):
         await interaction.followup.send(e)
 
 
-@tasks.loop(seconds=30)
+@tasks.loop(minutes=20)
 async def check_price():
     logging.info("Checking prices...")
     try:
@@ -157,9 +182,8 @@ async def check_price():
             title = product[2]
             threshold_price = product[3]
             user_id = product[4]
-            price = db.fetch_price_from_amazon(url=url)
+            price = fetch_price_from_amazon(url=url)
             if price is None:
-                logging.warning(f"Price is None for {title}")
                 continue
             if price <= threshold_price:
                 last_notification = db.get_latest_notification(product_id=product_id)

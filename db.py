@@ -1,15 +1,7 @@
 import sqlite3
 
-import requests
-from bs4 import BeautifulSoup
-
 conn = sqlite3.connect("amazon.db")
 c = conn.cursor()
-headers = {
-    "Accept-Language": "en-US,en;q=0.9,tr;q=0.8",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 OPR/105.0.0.0",
-    "Cache-Control": "max-age=0",
-}
 
 
 def create_table():
@@ -119,21 +111,3 @@ def get_latest_notification(product_id):
         (product_id,),
     )
     return c.fetchone()
-
-
-def fetch_price_from_amazon(url):
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
-        product_price = (
-            soup.find("span", class_="a-price-whole").get_text().split(",")[0]
-        )
-        if not product_price:
-            return None
-        # remove dot from price
-        product_price = product_price.replace(".", "")
-        return float(product_price)
-    except Exception as e:
-        print(e)
-        return None
