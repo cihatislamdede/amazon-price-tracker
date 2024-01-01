@@ -20,7 +20,7 @@ handler.setLevel(logging.INFO)
 
 logging.basicConfig(
     level=logging.INFO,
-    handlers=[handler],
+    handlers=[handler, logging.StreamHandler()],
     format="%(asctime)s:%(levelname)s:%(name)s: %(message)s",
 )
 
@@ -77,6 +77,7 @@ async def products(interaction: discord.Interaction):
         if not products:
             embed.description = "No products found"
             await interaction.followup.send(embed=embed, ephemeral=True)
+            return
         for product in products:
             url = product[1]
             title = product[2]
@@ -96,6 +97,12 @@ async def products(interaction: discord.Interaction):
 async def add(
     interaction: discord.Interaction, url: str, title: str, threshold_price: float
 ):
+    if threshold_price <= 0:
+        await interaction.response.send_message(
+            "Threshold price must be greater than 0",
+            ephemeral=True,
+        )
+        return
     await interaction.response.defer()
     try:
         await interaction.followup.send(f"Added `{title}` to the database :sunglasses:")
@@ -111,6 +118,9 @@ async def remove(interaction: discord.Interaction):
     options = []
     try:
         products = db.get_all_products()
+        if not products:
+            await interaction.followup.send("No products found")
+            return
         for product in products:
             options.append(
                 discord.SelectOption(
@@ -140,10 +150,18 @@ async def remove(interaction: discord.Interaction):
 
 @bot.tree.command(name="updateprice", description="Update a product's threshold price")
 async def updateprice(interaction: discord.Interaction, new_price: float):
+    if new_price <= 0:
+        await interaction.response.send_message(
+            "Threshold price must be greater than 0", ephemeral=True
+        )
+        return
     await interaction.response.defer()
     options = []
     try:
         products = db.get_all_products()
+        if not products:
+            await interaction.followup.send("No products found")
+            return
         for product in products:
             options.append(
                 discord.SelectOption(

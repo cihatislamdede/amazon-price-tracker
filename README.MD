@@ -27,3 +27,19 @@ A Discord bot that tracks the price of a product on Amazon and notifies the user
     ```shell
     python bot.py
     ```
+
+----
+
+## Docker
+
+1. Build the Docker image using the following command:
+
+    ```shell
+    docker build -t amazon-price-tracker .
+    ```
+
+2. Run the Docker container using the following command:
+
+    ```shell
+    docker run -d --name amazon-price-tracker --env-file .env amazon-price-tracker
+    ```
