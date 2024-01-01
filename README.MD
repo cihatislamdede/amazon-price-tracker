@@ -15,6 +15,7 @@ A Discord bot that tracks the price of a product on Amazon and notifies the user
 
     ```shell
     BOT_TOKEN=<your-bot-token>
+    CHANNEL_ID=<discord-channel-id-for-notifications>
     ```
 
     > **Note:** You can get your bot token from [here](https://discord.com/developers/applications).
