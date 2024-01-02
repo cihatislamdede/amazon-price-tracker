@@ -45,11 +45,10 @@ def fetch_price_from_amazon(url):
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
-        product_price = (
-            soup.find("span", class_="a-price-whole").get_text().split(",")[0]
-        )
+        product_price = soup.find("span", class_="a-price-whole")
         if not product_price:
             return None
+        product_price = product_price.get_text().split(",")[0]
         # remove dot from price
         product_price = product_price.replace(".", "")
         return float(product_price)
@@ -114,7 +113,7 @@ async def add(
 
 @bot.tree.command(name="remove", description="Remove a product from tracking")
 async def remove(interaction: discord.Interaction):
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
     options = []
     try:
         products = db.get_all_products()
@@ -136,13 +135,15 @@ async def remove(interaction: discord.Interaction):
         async def callback(interaction):
             db.delete_product(select.values[0])
             await interaction.response.send_message(
-                f"Removed from the database :sunglasses:",
+                f"Removed from the database :sunglasses:", ephemeral=True
             )
 
         select.callback = callback
         view = discord.ui.View(timeout=30)
         view.add_item(select)
-        await interaction.followup.send("Select a product to remove", view=view)
+        await interaction.followup.send(
+            "Select a product to remove", view=view, ephemeral=True
+        )
     except Exception as e:
         logging.error(e)
         await interaction.followup.send(e)
@@ -155,7 +156,7 @@ async def updateprice(interaction: discord.Interaction, new_price: float):
             "Threshold price must be greater than 0", ephemeral=True
         )
         return
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
     options = []
     try:
         products = db.get_all_products()
@@ -177,13 +178,15 @@ async def updateprice(interaction: discord.Interaction, new_price: float):
         async def callback(interaction):
             db.update_threshold(select.values[0], new_price)
             await interaction.response.send_message(
-                f"Updated threshold price :sunglasses:",
+                f"Updated threshold price :sunglasses:", ephemeral=True
             )
 
         select.callback = callback
         view = discord.ui.View(timeout=30)
         view.add_item(select)
-        await interaction.followup.send("Select a product to update", view=view)
+        await interaction.followup.send(
+            "Select a product to update", view=view, ephemeral=True
+        )
     except Exception as e:
         logging.error(e)
         await interaction.followup.send(e)

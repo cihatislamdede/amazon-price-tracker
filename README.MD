@@ -16,6 +16,10 @@ A Discord bot that tracks the price of a product on Amazon and notifies the user
     ```shell
     BOT_TOKEN=<your-bot-token>
     CHANNEL_ID=<discord-channel-id-for-notifications>
+    POSTGRES_DB=amazon_price_track
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=postgres
+    POSTGRES_HOST=db # db is the name of the service in docker-compose.yml
     ```
 
     > **Note:** You can get your bot token from [here](https://discord.com/developers/applications).
@@ -35,11 +39,11 @@ A Discord bot that tracks the price of a product on Amazon and notifies the user
 1. Build the Docker image using the following command:
 
     ```shell
-    docker build -t amazon-price-tracker .
+    docker compose build
     ```
 
 2. Run the Docker container using the following command:
 
     ```shell
-    docker run -d --name amazon-price-tracker --env-file .env amazon-price-tracker
+    docker compose up
     ```

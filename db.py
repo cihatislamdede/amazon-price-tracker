@@ -1,113 +1,119 @@
-import sqlite3
+import logging
+import psycopg2
+from dotenv import load_dotenv
+import os
 
-conn = sqlite3.connect("amazon.db")
+load_dotenv()
+
+print("POSTGRES_PASSWORD:", os.environ["POSTGRES_PASSWORD"])
+
+conn = psycopg2.connect(
+    database=os.environ["POSTGRES_DB"],
+    user=os.environ["POSTGRES_USER"],
+    password=os.environ["POSTGRES_PASSWORD"],
+    host=os.environ["POSTGRES_HOST"],
+)
 c = conn.cursor()
 
 
 def create_table():
-    c.execute(
-        """
-        CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT NOT NULL,
-            title TEXT NOT NULL,
-            threshold_price DECIMAL NOT NULL,
-            creator_id TEXT NOT NULL,
-            IS_DELETED BOOLEAN DEFAULT FALSE,
-            created_at DATE DEFAULT (datetime('now','localtime')),
-            updated_at DATE
+    try:
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS products (
+                id SERIAL PRIMARY KEY,
+                url TEXT NOT NULL,
+                title TEXT NOT NULL,
+                threshold_price DECIMAL NOT NULL,
+                creator_id TEXT NOT NULL,
+                IS_DELETED BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at timestamp 
+            )
+            """
         )
-        """
-    )
-    # create notification table
-    c.execute(
-        """
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_id INTEGER NOT NULL,
-            price DECIMAL NOT NULL,
-            created_at DATE DEFAULT (datetime('now','localtime')),
-            FOREIGN KEY (product_id) REFERENCES products (id)
+        # create notification table
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS notifications (
+                id SERIAL PRIMARY KEY,
+                product_id INTEGER NOT NULL,
+                price DECIMAL NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (product_id) REFERENCES products (id)
+            )
+            """
         )
-        """
-    )
-    conn.commit()
+        conn.commit()
+    except Exception as e:
+        logging.error(e)
+        conn.rollback()
 
 
 def insert_product(url, title, threshold_price, creator_id):
-    c.execute(
-        """
-        INSERT INTO products (url, title, threshold_price, creator_id)
-        VALUES (?, ?, ?, ?)
-        """,
-        (url, title, threshold_price, creator_id),
-    )
-    conn.commit()
+    try:
+        c.execute(
+            "INSERT INTO products (url, title, threshold_price, creator_id) VALUES (%s, %s, %s, %s)",
+            (url, title, threshold_price, creator_id),
+        )
+        conn.commit()
+    except Exception as e:
+        logging.error(e)
+        conn.rollback()
 
 
 def update_threshold(id, threshold_price):
-    c.execute(
-        """
-        UPDATE products
-        SET threshold_price = ?, updated_at = (datetime('now','localtime'))
-        WHERE id = ?
-        """,
-        (threshold_price, id),
-    )
-    conn.commit()
+    try:
+        c.execute(
+            "UPDATE products SET threshold_price = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s",
+            (threshold_price, id),
+        )
+        conn.commit()
+    except Exception as e:
+        logging.error(e)
+        conn.rollback()
 
 
 def delete_product(id):
-    c.execute(
-        """
-        UPDATE products
-        SET IS_DELETED = TRUE, updated_at = (datetime('now','localtime'))
-        WHERE id = ?
-        """,
-        (id,),
-    )
-    conn.commit()
+    try:
+        c.execute(
+            "UPDATE products SET IS_DELETED = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = %s",
+            (id,),
+        )
+        conn.commit()
+    except Exception as e:
+        logging.error(e)
+        conn.rollback()
 
 
 def get_product(id):
-    c.execute(
-        """
-        SELECT * FROM products
-        WHERE id = ? AND IS_DELETED = FALSE
-        """,
-        (id,),
-    )
+    c.execute("SELECT * FROM products WHERE id = %s", (id,))
     return c.fetchone()
 
 
 def get_all_products():
-    c.execute(
-        """
-        SELECT * FROM products WHERE IS_DELETED = FALSE
-        """
-    )
+    c.execute("SELECT * FROM products WHERE IS_DELETED = FALSE")
     return c.fetchall()
 
 
 def insert_notification(product_id, price):
-    c.execute(
-        """
-        INSERT INTO notifications (product_id, price)
-        VALUES (?, ?)
-        """,
-        (product_id, price),
-    )
-    conn.commit()
+    try:
+        c.execute(
+            "INSERT INTO notifications (product_id, price) VALUES (%s, %s)",
+            (product_id, price),
+        )
+        conn.commit()
+    except Exception as e:
+        logging.error(e)
+        conn.rollback()
 
 
 def get_latest_notification(product_id):
     c.execute(
-        """
-        SELECT price, created_at FROM notifications
-        WHERE product_id = ?
-        ORDER BY id DESC
-        LIMIT 1
-        """,
+        "SELECT * FROM notifications WHERE product_id = %s ORDER BY id DESC LIMIT 1",
         (product_id,),
     )
     return c.fetchone()
+
+
+create_table()
