@@ -118,7 +118,7 @@ async def remove(interaction: discord.Interaction):
     try:
         products = db.get_all_products()
         if not products:
-            await interaction.followup.send("No products found")
+            await interaction.followup.send("No products found", ephemeral=True)
             return
         for product in products:
             options.append(
@@ -161,7 +161,7 @@ async def updateprice(interaction: discord.Interaction, new_price: float):
     try:
         products = db.get_all_products()
         if not products:
-            await interaction.followup.send("No products found")
+            await interaction.followup.send("No products found", ephemeral=True)
             return
         for product in products:
             options.append(
