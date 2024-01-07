@@ -219,7 +219,7 @@ async def check_price():
                         and time_difference.seconds < 60 * 60 * 24
                     ):
                         continue
-                channel = await bot.get_channel(CHANNEL_ID)
+                channel = bot.get_channel(CHANNEL_ID)
                 embed = discord.Embed(title=title)
                 embed.colour = discord.Colour.green()
                 embed.url = url
