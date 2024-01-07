@@ -192,7 +192,7 @@ async def updateprice(interaction: discord.Interaction, new_price: float):
         await interaction.followup.send(e)
 
 
-@tasks.loop(minutes=20)
+@tasks.loop(minutes=10)
 async def check_price():
     logging.info("Checking prices...")
     try:
@@ -219,7 +219,7 @@ async def check_price():
                         and time_difference.seconds < 60 * 60 * 24
                     ):
                         continue
-                channel = bot.get_channel(CHANNEL_ID)
+                channel = await bot.get_channel(CHANNEL_ID)
                 embed = discord.Embed(title=title)
                 embed.colour = discord.Colour.green()
                 embed.url = url
