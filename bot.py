@@ -224,6 +224,7 @@ async def check_price():
                 embed.colour = discord.Colour.green()
                 embed.url = url
                 embed.description = f"Threshold: {threshold_price} {CURRENCY}\n New Price: {price} {CURRENCY}"
+                print(embed.description)
                 await channel.send(f"<@{user_id}>", embed=embed)
                 db.insert_notification(product_id=product_id, price=price)
                 logging.info(f"New price found for {title} --> {price}")
