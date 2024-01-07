@@ -5,7 +5,7 @@ import os
 
 load_dotenv()
 
-print("POSTGRES_PASSWORD:", os.environ["POSTGRES_PASSWORD"])
+# print("POSTGRES_PASSWORD:", os.environ["POSTGRES_PASSWORD"])
 
 conn = psycopg2.connect(
     database=os.environ["POSTGRES_DB"],
